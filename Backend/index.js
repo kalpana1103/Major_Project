@@ -24,6 +24,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
+app.get("/health", (req, res) => res.send("OK"));
 
 // IMPORTANT: mobile requires root route
 app.get("/", (req, res) => {

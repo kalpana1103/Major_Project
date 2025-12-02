@@ -7,7 +7,7 @@ export default function Users(){
   const load=async ()=>{ try{ const res = await api.get('/users?q=' + encodeURIComponent(q)); setUsers(res.data); }catch(err){ console.error(err); } };
   useEffect(()=>{ load(); },[q]);
   const toggle = async id=>{
-    try{ await api.post('/api/users/'+id+'/follow'); load(); }catch(err){ alert(err.response?.data?.message || err.message); }
+    try{ await api.post('/users/'+id+'/follow'); load(); }catch(err){ alert(err.response?.data?.message || err.message); }
   };
   return (
     <div style={{maxWidth:900, margin:'24px auto'}}>
