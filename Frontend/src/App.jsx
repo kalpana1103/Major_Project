@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Feed from './components/Feed';
 import Login from './components/Auth/Login';
@@ -9,8 +9,21 @@ import Users from './components/Users';
 
 export default function App() {
   const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(localStorage.getItem("theme") === "dark");
+
   const nav = useNavigate();
   const token = localStorage.getItem('token');
+
+  // Apply dark mode to body
+  useEffect(() => {
+    if (dark) {
+      document.body.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [dark]);
 
   const logout = () => {
     localStorage.clear();
@@ -22,16 +35,18 @@ export default function App() {
       <header className="topbar">
         <div className="brand" onClick={() => nav('/')}>⚡️ SocialMERN</div>
 
-        {/* Hamburger Menu Button */}
-        <button className="hamburger" onClick={() => setOpen(!open)}>
-          ☰
+        {/* Hamburger */}
+        <button className="hamburger" onClick={() => setOpen(!open)}>☰</button>
+
+        {/* Dark Mode Toggle */}
+        <button className="dark-btn" onClick={() => setDark(!dark)}>
+          {dark ? "🌞" : "🌙"}
         </button>
 
         <div className="searchwrap">
           <input id="global-search" placeholder="Search posts or users..." />
         </div>
 
-        {/* Responsive Navlinks */}
         <nav className={`navlinks ${open ? "show" : ""}`}>
           <Link to="/" onClick={() => setOpen(false)}>Feed</Link>
           <Link to="/users" onClick={() => setOpen(false)}>People</Link>
