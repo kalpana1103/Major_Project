@@ -6,17 +6,21 @@ const User = require('../models/User');
 const upload = require('../middleware/upload');
 
 // create post with photo
-router.post('/', auth, upload.single('photo'), async (req,res)=>{
-  try{
-    const { caption } = req.body;
-    const post = new Post({ author: req.user.id, caption });
-    if(req.file) post.photo = '/uploads/' + req.file.filename;
-    await post.save();
-    await post.populate('author','name dp');
-    res.json(post);
-  }catch(err){ console.error(err); res.status(500).json({ message:'Server error' }); }
-});
+router.post("/", auth, upload.single("photo"), async (req, res) => {
+  try {
+    const imgUrl = req.file.path;  // Cloudinary URL
 
+    const post = await Post.create({
+      caption: req.body.caption,
+      photo: imgUrl,
+      user: req.user.id,
+    });
+
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: "Upload failed" });
+  }
+});
 
 // get feed (recent posts)
 router.get('/', auth, async (req,res)=>{
@@ -68,22 +72,29 @@ router.post('/:id/comment', auth, async (req,res)=>{
   }catch(err){ res.status(500).json({ message:'Server error' }); }
 });
 
-// edit post (only author)
 router.put('/:id', auth, upload.single('photo'), async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-    if(!post) return res.status(404).json({ message:'Not found' });
+    if (!post) return res.status(404).json({ message: 'Not found' });
 
     const userId = req.user.id || req.user._id || req.user.userId;
-    if(post.author.toString() !== userId.toString()) 
-      return res.status(403).json({ message:'Not allowed' });
+    if (post.author.toString() !== userId.toString()) {
+      return res.status(403).json({ message: 'Not allowed' });
+    }
 
-    if(req.body.caption !== undefined) post.caption = req.body.caption;
-    if(req.file) post.photo = '/uploads/' + req.file.filename;
+    // Update caption
+    if (req.body.caption !== undefined) {
+      post.caption = req.body.caption;
+    }
+
+    // Update Cloudinary photo
+    if (req.file) {
+      post.photo = req.file.path;
+    }
 
     const updatedPost = await post.save();
 
-    // Correct Mongoose 7+ populate
+    // Populate Author + Comments User
     await updatedPost.populate([
       { path: 'author', select: 'name dp' },
       { path: 'comments.user', select: 'name dp' }
@@ -91,9 +102,9 @@ router.put('/:id', auth, upload.single('photo'), async (req, res) => {
 
     res.json(updatedPost);
 
-  } catch(err) {
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ message:'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
