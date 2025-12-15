@@ -1,40 +1,26 @@
-// const multer = require('multer');
-// const path = require('path');
-// const fs = require('fs');
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 
-// const uploadDir = path.join(__dirname, '..', 'uploads');
-// if(!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-// // storage with original filename + timestamp
-// const storage = multer.diskStorage({
-//   destination: function(req,file,cb){
-//     cb(null, uploadDir);
-//   },
-//   filename: function(req,file,cb){
-//     const ext = path.extname(file.originalname);
-//     const name = file.fieldname + '-' + Date.now() + ext;
-//     cb(null, name);
-//   }
-// });
-
-// const fileFilter = (req,file,cb) => {
-//   if(!file.mimetype.startsWith('image/')) return cb(new Error('Only images allowed'),false);
-//   cb(null,true);
-// };
-
-// module.exports = multer({ storage, fileFilter });
-const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("../config/cloudinary");
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "social_MERN",
-    allowed_formats: ["jpg", "png", "jpeg", "gif"],
+    folder: 'social_posts', // optional folder in Cloudinary
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'],
+    transformation: [{ width: 800, crop: 'limit' }], // optional
   },
 });
 
-const upload = multer({ storage });
+const fileFilter = (req, file, cb) => {
+  if (!file.mimetype.startsWith('image/')) return cb(new Error('Only images allowed'), false);
+  cb(null, true);
+};
 
-module.exports = upload;
+module.exports = multer({ storage, fileFilter });

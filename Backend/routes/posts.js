@@ -6,19 +6,20 @@ const User = require('../models/User');
 const upload = require('../middleware/upload');
 
 // create post with photo
-router.post("/", auth, upload.single("photo"), async (req, res) => {
+router.post('/', auth, upload.single('photo'), async (req, res) => {
   try {
-    const imgUrl = req.file.path;  // Cloudinary URL
+    const { caption } = req.body;
+    const post = new Post({ author: req.user.id, caption });
 
-    const post = await Post.create({
-      caption: req.body.caption,
-      photo: imgUrl,
-      user: req.user.id,
-    });
+    // Cloudinary URL
+    if (req.file) post.photo = req.file.path; 
 
+    await post.save();
+    await post.populate('author', 'name dp');
     res.json(post);
-  } catch (error) {
-    res.status(500).json({ error: "Upload failed" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
